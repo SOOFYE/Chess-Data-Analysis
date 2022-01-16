@@ -2,13 +2,86 @@
 #include "csv.hpp"
 #include <map>
 #include <unordered_map>
+#include<queue> 
 
-using namespace std;
+
 using namespace csv;
+using namespace std;
 
-const int S = 5000;
+const long int S = 5000;
+const int minGames = 30;
+
+class Probability {
+public: 
+    string opening;
+    int wins;
+    int loss;
+    int draw;
+    double winProbability;
+    int totalGamesPlayed;
+
+    Probability() {
+        opening = "";
+        wins = 0;
+        loss = 0;
+        draw = 0;
+        winProbability = 0.00;
+        totalGamesPlayed = 0;
+    }
+
+    Probability(string o,int w,int l,int d,double Wp,int g) {
+        opening = o;
+        wins = w;
+        loss = l;
+        draw = d;
+        winProbability = Wp;
+        totalGamesPlayed = g;
+    }
 
 
+
+};
+
+class Openings {
+public:
+    string openings;
+    int frequency;
+   
+
+    Openings() {
+        openings = "";
+        frequency = 0;
+    }
+
+    Openings(string o, int f) {
+        openings = o;
+        frequency = f;
+    }
+
+    
+};
+
+
+class OpeningData {
+    string MostFrequentEvet;
+    int wins;
+    int loss;
+    int draw;
+
+    OpeningData() {
+        MostFrequentEvet = "";
+        wins = 0;
+        loss = 0;
+        draw = 0;
+    }
+
+    OpeningData(string m,int w,int l,int d) {
+        MostFrequentEvet = m;
+        wins = w;
+        loss = l;
+        draw = d;
+    }
+};
 
 class UserData {
 public:
@@ -83,8 +156,19 @@ public:
 
 
 
-void getPlayersData(vector<RowData>& rowobjects, string player,unordered_map<string, UserData>& userMapping);
+bool operator < (const Openings& o1, const Openings& o2) {
+
+    return o1.frequency < o2.frequency;
+
+}
+
+
+
+
+void getPlayersData(string player,unordered_map<string, UserData>& userMapping);
 void openingsCommonELO(map<int, map<string, int>>& rangeMapping, vector<RowData>& rowobjects);
+void probability(map<string, Probability>& ProbMapping);
+
 
 int main()
 {
@@ -92,6 +176,9 @@ int main()
     vector<RowData> rowobjects(S);
     unordered_map<string, UserData> userMapping;
     map<int, map<string, int>> rangeMapping;
+    map<string, int> openingMapping;
+    map<string, Probability> ProbMapping;
+
     int i = 0;
     int max = -9999;
 
@@ -285,27 +372,51 @@ int main()
                 rangeMapping[3000][rowobjects[i].Opening]++;
             }
         }
-    }
 
+
+        /*ProbMapping[rowobjects[i].Opening].opening = rowobjects[i].Opening;
+
+        if (rowobjects[i].Result == "Jan-00") {
+            ProbMapping[rowobjects[i].Opening].wins++;
+        }
+        if (rowobjects[i].Result == "0-1") {
+            ProbMapping[rowobjects[i].Opening].loss++;
+        }
+        if (rowobjects[i].Result == "1/2-1/2") {
+            ProbMapping[rowobjects[i].Opening].draw++;
+        }
+
+        ProbMapping[rowobjects[i].Opening].winProbability = (double)ProbMapping[rowobjects[i].Opening].wins / ((double)ProbMapping[rowobjects[i].Opening].wins + (double)ProbMapping[rowobjects[i].Opening].loss + (double)ProbMapping[rowobjects[i].Opening].draw) * 100;
+        ProbMapping[rowobjects[i].Opening].totalGamesPlayed = ProbMapping[rowobjects[i].Opening].wins + ProbMapping[rowobjects[i].Opening].loss + ProbMapping[rowobjects[i].Opening].draw;
+   */
+       
+       
+
+
+     }
+
+    //probability(ProbMapping);
    
 
 
     cout << "Search for a Player: ";
     string player;
     cin >> player;
-    getPlayersData(rowobjects,player,userMapping);
+    getPlayersData(player,userMapping);
 
-    cout << endl << endl << endl << endl;
+    //cout << endl << endl << endl << endl;
 
     openingsCommonELO(rangeMapping, rowobjects);
-   
-    
+
 
    
+ 
 }
 
 
-void getPlayersData(vector<RowData>& rowobjects,string player,unordered_map<string, UserData>& userMapping) {
+
+
+void getPlayersData(string player,unordered_map<string, UserData>& userMapping) {
 
     int max = -9999;
     string ev;
@@ -369,15 +480,50 @@ void openingsCommonELO(map<int, map<string, int>>& rangeMapping,vector<RowData>&
 
     int LB = 0;
     int UB = 0;
+    int i = 0;
+
+    priority_queue<Openings> mostFrequent;
+    Openings obj;
+    map<int, pair<string,int>> mostfreqopn;
 
     for (auto ent1 : rangeMapping) {
         UB = ent1.first;
         cout << "Most used opening in ELO Range: " << LB << "-" << UB << endl;
         for (auto ent2 : ent1.second) {
             cout << ent2.first << ":" << ent2.second << endl;
+
+            obj.openings = ent2.first;
+            obj.frequency = ent2.second;
+            mostFrequent.push(obj);
             }
+
+        mostfreqopn[UB] = make_pair(mostFrequent.top().openings,mostFrequent.top().frequency);
+        //cout << "\n\n\n\n" <<"MOST FREQUENT OPENING WITHIN RANGE: "<<LB<<"-"<<UB<< mostFrequent.top().openings << "\n\n\n\n";
+        while (!mostFrequent.empty())
+            mostFrequent.pop();
+
         LB = UB;
         cout << endl<<endl;
         }
 
+    int lbb = 0;
+    int ubb = 0;
+    for (auto mfo : mostfreqopn) {
+        ubb = mfo.first;
+        cout << "Most Frequent Openings within ELO Range " << lbb << "-" << ubb << ":  " << mfo.second.first << "with freq =" << mfo.second.second << endl;;
+        lbb = ubb;
+    }
 }
+
+//void probability(map<string, Probability>& ProbMapping) {
+//   
+//
+//    for (auto x : ProbMapping) {
+//        if (!(x.second.winProbability== 100) && x.second.totalGamesPlayed > minGames) {
+//            cout << x.first << " wins: " << x.second.wins << " loss: " << x.second.loss << " draw: " << x.second.draw << " Probability: " << x.second.winProbability << "%" << endl;
+//        }
+//    }
+//
+//}
+//
+//
