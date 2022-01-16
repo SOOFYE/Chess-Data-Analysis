@@ -18,7 +18,7 @@
     <ClCompile Include="project.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="main project.cpp">
+    <ClCompile Include="MergeSort.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
